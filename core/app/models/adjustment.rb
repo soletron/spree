@@ -25,9 +25,9 @@ class Adjustment < ActiveRecord::Base
   scope :shipping, lambda { where(:label => I18n.t(:shipping)) }
   scope :optional, where(:mandatory => false)
 
-  after_save { order.update! }
-  after_destroy { order.update! }
-
+  after_save :update_order, if: :save_update_order?
+  after_destroy :update_order, if: :destroy_update_order?
+  
   # Checks if adjustment is applicable for the order. Should return _true_ if adjustment should be preserved and
   # _false_ if removed. Default behaviour is to preserve adjustment if amount is present and non 0.  Exceptions
   # are made if the adjustment is considered +mandatory+.
@@ -44,4 +44,20 @@ class Adjustment < ActiveRecord::Base
     return if locked? || originator.nil?
     originator.update_adjustment(self, source)
   end
+  
+  private
+  
+  
+  def save_update_order?
+    true
+  end
+  
+  def destroy_update_order?
+    true
+  end
+  
+  def update_order
+    order.update!
+  end
+
 end
